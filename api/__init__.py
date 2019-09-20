@@ -6,6 +6,7 @@ from flask.cli import with_appcontext
 from flask_marshmallow import Marshmallow
 from api.database import Base
 from flask_migrate import Migrate
+from flask_cors import CORS
 
 from api.config import DATA_SOURCE
 
@@ -20,6 +21,8 @@ def create_app(test_config=None):
         SQLALCHEMY_DATABASE_URI=DATA_SOURCE,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
     )
+    
+    CORS(app)
 
     ma.init_app(app)
 
