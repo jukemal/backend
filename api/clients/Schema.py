@@ -3,6 +3,10 @@ from api.clients.models import Clients
 
 
 class ClientsSchema(ma.ModelSchema):
+    """
+        Scheme for Clients Model
+    """
+
     class Meta:
         model = Clients
 

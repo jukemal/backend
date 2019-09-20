@@ -3,6 +3,10 @@ from api.bill.models import Bills
 
 
 class BillsSchema(ma.ModelSchema):
+    """
+        Scheme for Bills Model
+    """
+
     class Meta:
         model = Bills
 

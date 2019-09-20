@@ -5,6 +5,10 @@ from api import Base
 
 
 class Clients(Base):
+    """
+        Table structure for "clients" Table
+    """
+
     __tablename__ = 'clients'
 
     id_ = Column(Integer, primary_key=True)

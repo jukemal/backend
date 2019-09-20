@@ -6,6 +6,10 @@ from api import Base
 
 
 class Bills(Base):
+    """
+        Table structure for "bills" Table
+    """
+
     __tablename__ = 'bills'
 
     id_ = Column(Integer, primary_key=True)
