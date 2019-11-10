@@ -21,4 +21,5 @@ class Bills(Base):
     amount = Column(Float(precision=2), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
-    client = relationship("Clients", backref="bills", uselist=False)
+    client = relationship("Clients", backref="bills",
+                          uselist=False, lazy='subquery')

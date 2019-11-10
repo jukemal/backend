@@ -1,14 +1,12 @@
 image: python
 
 ports:
-- port: 5000
-  onOpen: open-browser
-
+  - port: 5000
+    onOpen: open-browser
 
 tasks:
-- init: pip3 install pipenv && pipenv install
-  command: source .venv/bin/activate && flask run
-
+  - init: pip3 install pipenv autopep8 && pipenv install
+    command: pipenv run flask run --host 0.0.0.0
 
 vscode:
   extensions:

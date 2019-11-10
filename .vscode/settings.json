@@ -3,5 +3,6 @@
     "cSpell.words": [
         "onupdate",
         "werkzeug"
-    ]
+   ],
+   "python.formatting.provider": "autopep8"
 }

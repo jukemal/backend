@@ -46,9 +46,6 @@ class DistributorsAPI(MethodView):
         return distributor_schema.jsonify(distributor)
 
     def delete(self, id):
-        if not request.content_type == 'application/json':
-            return response('failed', 'Content-type must be application/json', 401)
-
         distributor = Distributors.query.filter(Distributors.id_ == id).first()
 
         if not distributor:

@@ -1,7 +1,7 @@
 from flask import jsonify, request, make_response
 from flask.views import MethodView
 from werkzeug.exceptions import abort
-from sqlalchemy import update
+from sqlalchemy import func
 
 from api.database import db_session
 
@@ -14,104 +14,52 @@ from api.helpers import response
 
 
 class BillsAPI(MethodView):
-    """
-        class for "/bills/" endpoint
-    """
-
     def get(self, id):
-        """function for "GET /bills/" endpoint
-
-        Args:
-            id (int): id for the Bill
-
-        Returns:
-            If endpoint is "GET /bills/<id>"
-                {
-                    "amount": 10000,
-                    "bill_number": "100",
-                    "cashier": "Cashier 1",
-                    "client": 1,
-                    "client_name": "Client 1",
-                    "created_at": "2019-09-20T06:07:23.789286",
-                    "date": "2019-10-15T00:00:00",
-                    "id_": 1,
-                    "paid": false,
-                    "updated_at": null
-                }
-
-            If endpoint is "GET /bills/"
-                [
-                    {
-                        "amount": 10000,
-                        "bill_number": "100",
-                        "cashier": "Cashier 1",
-                        "client": 1,
-                        "client_name": "Client 1",
-                        "created_at": "2019-09-20T06:07:23.789286",
-                        "date": "2019-10-15T00:00:00",
-                        "id_": 1,
-                        "paid": false,
-                        "updated_at": null
-                    },
-                    {
-                        "amount": 10000,
-                        "bill_number": "101",
-                        "cashier": "Cashier 1",
-                        "client": 3,
-                        "client_name": "Client 3",
-                        "created_at": "2019-09-20T06:07:23.792931",
-                        "date": "2019-10-15T00:00:00",
-                        "id_": 2,
-                        "paid": false,
-                        "updated_at": null
-                    }
-                ]
-        """
-
         if id is None:
             bills = Bills.query.all()
+
+            report = Bills.query.with_entities(func.date_trunc("day", Bills.date).label("date"), func.count(
+                Bills.bill_number).label("count")).group_by(func.date_trunc("day", Bills.date)).all()
+
+            return jsonify(data=bills_schema.dump(bills), report=report)
+
             return bills_schema.jsonify(bills)
         else:
             bill = Bills.query.filter(Bills.id_ == id).first()
 
             if not bill:
-                abort(404)
+                return response('Not Found', f'Bill with Bill Code {id} is not available.', 404)
 
             return bill_schema.jsonify(bill)
 
     def post(self):
-        """function for "POST /bills/" endpoint
-
-        Returns:
-            {
-                "amount": 10000,
-                "bill_number": "100",
-                "cashier": "Cashier 1",
-                "client": 1,
-                "client_name": "Client 1",
-                "created_at": "2019-09-20T06:07:23.789286",
-                "date": "2019-10-15T00:00:00",
-                "id_": 1,
-                "paid": false,
-                "updated_at": null
-            }
-        """
-
         if not request.content_type == 'application/json':
             return response('failed', 'Content-type must be application/json', 401)
 
         data = request.get_json()
 
-        client1 = Clients.query.filter(
-            Clients.id_ == data.get('client')).first()
+        fields = ['client', 'cashier', 'paid','date', 'amount']
+        string = ''
 
-        print(client1.name)
+        for i in fields:
+            if not data.get(f'{i}'):
+                string = string+f'\"{i}\", '
+
+        isPaid=False
+
+        if data.get('paid')=="paid":
+            isPaid=True
+
+        if string:
+            return response('Invalid POST Request', f'These fields should be included in the POST Request. {string}', 404)
+
+        client1 = Clients.query.filter(Clients.id_ == data.get('client')).first()
 
         bill = Bills(
-            bill_number=data.get('bill_number'),
+            bill_number="100",
             client=client1,
             cashier=data.get('cashier'),
-            paid=data.get('paid'),
+            paid=isPaid,
             date=data.get('date'),
             amount=data.get('amount')
         )
@@ -119,63 +67,52 @@ class BillsAPI(MethodView):
         db_session.add(bill)
         db_session.commit()
 
-        return bill_schema.jsonify(bill)
+        return response('Added Successfully.', f'Successfully added the Bill with Code {str(bill.bill_number)}', 200, bill_schema.dump(bill))
 
     def delete(self, id):
-        """function for "DELETE /bills/<id>" endpoint
-
-        Args:
-            id (int): id for the Client
-
-        Returns:
-            {
-                "status" : "success,
-                "message" : "Successfully deleted the item from Bills with Id 1"
-            }
-        """
-
-        if not request.content_type == 'application/json':
-            return response('failed', 'Content-type must be application/json', 401)
-
         bill = Bills.query.filter(Bills.id_ == id).first()
 
         if not bill:
-            abort(404)
+            return response('Not Found', f'Bill with Bill Code {id} is not available.', 404)
 
         db_session.delete(bill)
         db_session.commit()
 
-        return response('success', 'Successfully deleted the item from Bills with Id ' + str(id), 200)
+        return response('Deleted Successfully.', f'Successfully deleted the Bill with Code {str(bill.bill_number)}', 200, bill_schema.dump(bill))
 
     def put(self, id):
-        """function for "PUT /bills/<id>" endpoint
-
-        Args:
-            id (int): id for the Client
-
-        Returns:
-            {
-                "status" : "success,
-                "message" : "Successfully updated the item from Bills with Id 1"
-            }
-        """
-
         if not request.content_type == 'application/json':
             return response('failed', 'Content-type must be application/json', 401)
 
         bill = Bills.query.filter(Bills.id_ == id).first()
 
         if not bill:
-            abort(404)
+            return response('Not Found', f'Bill with Bill Code {id} is not available.', 404)
 
         data = request.get_json()
 
-        bill.bill_number = data.get('bill_number'),
-        bill.cashier = data.get('cashier'),
-        # bill.paid = data.get('paid'),
-        bill.date = data.get('date'),
-        bill.amount = data.get('amount')
+        print(data)
+
+        # if data.get('bill_number'):
+        #     bill.bill_number = data.get('bill_number')
+
+        if data.get('client'):
+            bill.client_id = data.get('client')
+
+        if data.get('cashier'):
+            bill.cashier = data.get('cashier')
+
+        if data.get('paid') == "paid":
+            bill.paid = True
+        else:
+            bill.paid = False
+
+        if data.get('date'):
+            bill.date = data.get('date')
+
+        if data.get('amount'):
+            bill.amount = data.get('amount')
 
         db_session.commit()
 
-        return response('success', 'Successfully updated the item from Bills with Id ' + str(id), 200)
+        return response('Updated Successfully.', f'Successfully updated the Bill with Code {str(bill.bill_number)}', 200, bill_schema.dump(bill))

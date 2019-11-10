@@ -2,23 +2,37 @@ from datetime import date
 
 from api.database import db_session
 
-from api.items.models import Items
+from api.items.models import Items,Stock
 from api.distributors.models import Distributors
 from api.clients.models import Clients
 from api.payments.models import Payment_Types, Payment_Methods, Payments
 from api.bill.models import Bills
+from api.users.models import User, Role, RolesUsers
+
+# When adding object contaning another object, In the first object there should be
+# backref to second object. For more information see Payment model.
+
+# Execute these commands in 'flask shell'
 
 
-item1 = Items(item_code=100, name="Baby Soap", qty=10, retail_price=45,
-              wholesale_price=40, mfd_date=date(2019, 4, 20), exp_date=date(2020, 4, 20))
-item2 = Items(item_code=101, name="Rice", qty=100, retail_price=80,
-              wholesale_price=75, mfd_date=date(2019, 6, 15), exp_date=date(2020, 6, 1))
-item3 = Items(item_code=102, name="Sugar", qty=5, retail_price=120,
-              wholesale_price=110, mfd_date=date(2019, 8, 1), exp_date=date(2020, 8, 1))
+item1 = Items(name="Baby Soap")
+item2 = Items(name="Rice")
+item3 = Items(name="Sugar")
 
 db_session.add(item1)
 db_session.add(item2)
 db_session.add(item3)
+db_session.commit()
+
+stock1 = Stock(item=item1, qty=10, retail_price=45,wholesale_price=40, mfd_date=date(2019, 4, 20), exp_date=date(2020, 4, 20))
+stock2 = Stock(item=item2, qty=100, retail_price=80,
+              wholesale_price=75, mfd_date=date(2019, 6, 15), exp_date=date(2020, 6, 1))
+stock3 = Stock(item=item3, qty=5, retail_price=120,
+              wholesale_price=110, mfd_date=date(2019, 8, 1), exp_date=date(2020, 8, 1))
+
+db_session.add(stock1)
+db_session.add(stock2)
+db_session.add(stock3)
 db_session.commit()
 
 distributor1 = Distributors(
@@ -92,4 +106,27 @@ bill3 = Bills(bill_number="102", client=client2, cashier="Cashier 1",
 db_session.add(bill1)
 db_session.add(bill2)
 db_session.add(bill3)
+db_session.commit()
+
+role1 = Role(name="admin", description="Administration Privileges")
+role2 = Role(name="user", description="User Privileges")
+
+db_session.add(role1)
+db_session.add(role2)
+db_session.commit()
+
+user1 = User(email="admin@admin.com", username="admin",
+             password="$2b$12$JhqH7FrewPUE54uKRuZ7xukkwr0Tj1ZUtaqQe/M.p.WDQF.QMti7C")
+user2 = User(email="user@user.com", username="user",
+             password="$2b$12$cZaCVMjqM86ofALQgzlyiuqUybgZhEQDba2SIGg9yOlCZdBL6.oPC")
+
+db_session.add(user1)
+db_session.add(user2)
+db_session.commit()
+
+role_user1 = RolesUsers(user=user1, role=role1)
+role_user2 = RolesUsers(user=user2, role=role2)
+
+db_session.add(role_user1)
+db_session.add(role_user2)
 db_session.commit()

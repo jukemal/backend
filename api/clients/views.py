@@ -115,9 +115,6 @@ class ClientsAPI(MethodView):
             }
         """
 
-        if not request.content_type == 'application/json':
-            return response('failed', 'Content-type must be application/json', 401)
-
         client = Clients.query.filter(Clients.id_ == id).first()
 
         if not client:

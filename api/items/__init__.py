@@ -1,1 +1,1 @@
-from api.items.views import ItemsAPI
+from api.items.views import ItemsAPI,StockAPI
